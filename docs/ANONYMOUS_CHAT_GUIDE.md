@@ -240,6 +240,15 @@ Handles message composition:
 - **Optimistic Updates**: Local message display before confirmation
 - **Self-Message Filtering**: Users don't receive their own messages via WebSocket (prevents duplicates)
 
+### Responsive Design
+
+- **Mobile-First**: Optimized for mobile devices (320px+)
+- **Tablet Support**: Responsive layout for tablets (768px+)
+- **Desktop Experience**: Full-featured experience on desktop (1024px+)
+- **Adaptive Components**: All UI elements scale appropriately
+- **Touch-Friendly**: Optimized for touch interactions on mobile
+- **Flexible Layout**: Header stacks vertically on mobile, horizontal on larger screens
+
 ## 🔧 Configuration
 
 ### Environment Variables

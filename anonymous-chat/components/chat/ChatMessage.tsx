@@ -80,24 +80,24 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   return (
     <div
-      className={`flex gap-4 group hover:scale-[1.02] transition-all duration-300 ${
+      className={`flex gap-2 sm:gap-4 group hover:scale-[1.02] transition-all duration-300 ${
         message.isOwn ? "flex-row-reverse" : ""
       }`}
     >
       {/* Avatar */}
-      <div className="relative">
-        <Avatar className="w-12 h-12 border-2 border-white/20 shadow-lg hover:scale-110 transition-transform duration-300">
+      <div className="relative flex-shrink-0">
+        <Avatar className="w-10 h-10 sm:w-12 sm:h-12 border-2 border-white/20 shadow-lg hover:scale-110 transition-transform duration-300">
           <AvatarFallback
             className={`bg-gradient-to-r ${getAvatarGradient(
               message.username
-            )} text-white text-sm font-bold animate-glow`}
+            )} text-white text-xs sm:text-sm font-bold animate-glow`}
           >
             {getInitials(message.username)}
           </AvatarFallback>
         </Avatar>
 
         {/* Mood Indicator */}
-        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
+        <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
           {getMoodIcon(message.mood)}
         </div>
 
@@ -113,18 +113,18 @@ export function ChatMessage({ message }: ChatMessageProps) {
       <div
         className={`flex flex-col ${
           message.isOwn ? "items-end" : "items-start"
-        } max-w-[70%] flex-1`}
+        } max-w-[85%] sm:max-w-[70%] flex-1`}
       >
         {/* Username and Time */}
         <div
-          className={`flex items-center gap-3 mb-2 ${
+          className={`flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 ${
             message.isOwn ? "flex-row-reverse" : ""
           }`}
         >
-          <span className="text-sm font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+          <span className="text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent truncate max-w-[120px] sm:max-w-none">
             {message.username}
           </span>
-          <span className="text-xs text-white/60 backdrop-blur-sm bg-white/5 px-2 py-1 rounded-full">
+          <span className="text-xs text-white/60 backdrop-blur-sm bg-white/5 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0">
             {formatTime(message.timestamp)}
           </span>
         </div>
@@ -132,14 +132,14 @@ export function ChatMessage({ message }: ChatMessageProps) {
         {/* Message Bubble */}
         <div className="relative group/bubble">
           <div
-            className={`relative px-6 py-4 rounded-2xl backdrop-blur-xl border shadow-xl transition-all duration-300 hover:scale-105 ${
+            className={`relative px-3 sm:px-6 py-2 sm:py-4 rounded-xl sm:rounded-2xl backdrop-blur-xl border shadow-xl transition-all duration-300 hover:scale-105 ${
               message.isOwn
                 ? "bg-gradient-to-r from-purple-500/80 via-pink-500/80 to-cyan-500/80 text-white border-white/20 rounded-br-md shadow-purple-500/30"
                 : "bg-white/10 text-white border-white/20 rounded-bl-md shadow-black/20"
             }`}
           >
             {/* Message Text */}
-            <p className="text-sm leading-relaxed font-medium relative z-10">
+            <p className="text-xs sm:text-sm leading-relaxed font-medium relative z-10 break-words">
               {message.text}
             </p>
 
@@ -172,12 +172,15 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
         {/* Message Status */}
         {message.isOwn && (
-          <div className="flex items-center gap-2 mt-2 opacity-70">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse">
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-2 opacity-70">
+            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full animate-pulse">
               <div className="w-full h-full bg-green-400 rounded-full animate-ping"></div>
             </div>
-            <span className="text-xs text-green-300 font-medium">
+            <span className="text-xs text-green-300 font-medium hidden sm:inline">
               Delivered to the anime dimension
+            </span>
+            <span className="text-xs text-green-300 font-medium sm:hidden">
+              Delivered
             </span>
           </div>
         )}

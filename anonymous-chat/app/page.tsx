@@ -25,7 +25,7 @@ export default function Home() {
       </div>
 
       {/* Main Chat Container */}
-      <div className="relative z-10 max-w-5xl mx-auto my-auto px-6 py-6">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 min-h-screen flex flex-col justify-center">
         <ChatContainer
           roomName={
             process.env.NEXT_PUBLIC_TOPIC_NAME || "anonymous-anime-universe"
@@ -34,23 +34,23 @@ export default function Home() {
       </div>
 
       <div
-        className="text-center text-muted-foreground animate-fade-in pb-6"
+        className="text-center text-muted-foreground animate-fade-in pb-4 sm:pb-6 px-4"
         style={{ animationDelay: "0.4s" }}
       >
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <Sparkles className="w-5 h-5 text-yellow-500 animate-spin-slow" />
-          <p className="text-lg font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4 flex-wrap">
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 animate-spin-slow" />
+          <p className="text-sm sm:text-lg font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
             Built for learning Kafka with real-time messaging
           </p>
-          <Sparkles className="w-5 h-5 text-yellow-500 animate-spin-slow" />
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 animate-spin-slow" />
         </div>
 
-        <div className="flex items-center justify-center gap-2">
-          <Heart className="w-4 h-4 text-red-500 animate-pulse" />
-          <p className="text-sm font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+          <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 animate-pulse" />
+          <p className="text-xs sm:text-sm font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
             Made with love for the developer community
           </p>
-          <Heart className="w-4 h-4 text-red-500 animate-pulse" />
+          <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 animate-pulse" />
         </div>
       </div>
     </div>
