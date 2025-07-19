@@ -145,6 +145,42 @@ curl -X OPTIONS http://localhost:8001/chat/send \
   -H "Origin: http://localhost:3000"
 ```
 
+### Receiving Own Messages (Duplicates)
+
+**Symptoms:**
+
+- User sees their own message twice
+- Message appears once from optimistic update and once from WebSocket
+- Duplicate messages in chat
+
+**Cause:**
+WebSocket broadcasts messages to all connected clients, including the sender.
+
+**Solution:**
+Filter out messages from the current user in the WebSocket message handler:
+
+```typescript
+onMessage: (chatMessage: ChatMessageType) => {
+  // Filter out messages from the current user
+  if (chatMessage.username === currentUsername) {
+    console.log("🚫 Ignoring own message from WebSocket");
+    return;
+  }
+
+  // Process only messages from other users
+  const message: Message = {
+    id: chatMessage.id,
+    text: chatMessage.text,
+    username: chatMessage.username,
+    timestamp: chatMessage.timestamp,
+    isOwn: false,
+    mood: getRandomMood(),
+  };
+
+  setMessages((prev) => [...prev, message]);
+};
+```
+
 ## 🔧 Backend Issues
 
 ### Consumer Server Not Starting

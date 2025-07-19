@@ -70,13 +70,20 @@ export function ChatContainer({ roomName, username }: ChatContainerProps) {
       onMessage: (chatMessage: ChatMessageType) => {
         if (!isMounted) return;
         console.log("📨 Received message:", chatMessage);
+
+        // Filter out messages from the current user (they already see their own message)
+        if (chatMessage.username === currentUsername) {
+          console.log("🚫 Ignoring own message from WebSocket");
+          return;
+        }
+
         // Convert chat service message to local message format
         const message: Message = {
           id: chatMessage.id,
           text: chatMessage.text,
           username: chatMessage.username,
           timestamp: chatMessage.timestamp,
-          isOwn: chatMessage.username === currentUsername,
+          isOwn: false, // This is always false since we filtered out own messages
           mood: getRandomMood(),
         };
 

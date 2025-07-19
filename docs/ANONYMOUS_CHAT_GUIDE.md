@@ -238,6 +238,7 @@ Handles message composition:
 - **Message Broadcasting**: Real-time message delivery to all clients
 - **Connection Status**: Real-time connection status updates
 - **Optimistic Updates**: Local message display before confirmation
+- **Self-Message Filtering**: Users don't receive their own messages via WebSocket (prevents duplicates)
 
 ## 🔧 Configuration
 
