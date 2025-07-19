@@ -9,12 +9,16 @@ import os
 import time
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from confluent_kafka import Consumer, KafkaError
 import uvicorn
+import asyncio
+import json
+from typing import Set
 
 
 # Pydantic models for request/response
@@ -23,6 +27,12 @@ class ConsumeRequest(BaseModel):
     group_id: str = "python-consumer-api-group"
     max_messages: int = 10
     timeout: float = 5.0
+
+
+class ChatMessageRequest(BaseModel):
+    topic: str = "anonymous-anime-universe"
+    group_id: str = "chat-consumer-group"
+    last_message_id: Optional[str] = None
 
 
 class MessageInfo(BaseModel):
@@ -93,8 +103,89 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Templates for HTML pages
 templates = Jinja2Templates(directory="consumers/templates")
+
+# WebSocket connection manager
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Set[WebSocket] = set()
+        self.consumer: Optional[Consumer] = None
+        self.is_consuming = False
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.add(websocket)
+        print(f"Client connected. Total connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+        print(f"Client disconnected. Total connections: {len(self.active_connections)}")
+
+    async def broadcast(self, message: str):
+        if self.active_connections:
+            await asyncio.gather(
+                *[connection.send_text(message) for connection in self.active_connections]
+            )
+
+    def set_consumer(self, consumer: Consumer):
+        self.consumer = consumer
+
+    async def start_kafka_consumption(self):
+        """Start consuming messages from Kafka and broadcasting to WebSocket clients."""
+        if not self.consumer or self.is_consuming:
+            return
+        
+        self.is_consuming = True
+        print("🔄 Starting Kafka message consumption for WebSocket clients...")
+        
+        # Subscribe to the chat topic
+        self.consumer.subscribe(['anonymous-anime-universe'])
+        
+        while self.is_consuming and self.active_connections:
+            try:
+                msg = self.consumer.poll(1.0)
+                
+                if msg is None:
+                    continue
+                
+                if msg.error():
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                        continue
+                    else:
+                        print(f"❌ Kafka error: {msg.error()}")
+                        continue
+                
+                # Process the message
+                try:
+                    message_str = msg.value().decode('utf-8')
+                    message_data = json.loads(message_str)
+                    
+                    # Filter for chat messages
+                    if message_data.get("type") == "chat_message":
+                        # Broadcast to all connected WebSocket clients
+                        await self.broadcast(message_str)
+                        print(f"📡 Broadcasted message: {message_data['username']}: {message_data['text']}")
+                
+                except json.JSONDecodeError:
+                    print(f"❌ Failed to decode JSON message: {msg.value()}")
+                except Exception as e:
+                    print(f"❌ Error processing message: {e}")
+                    
+            except Exception as e:
+                print(f"❌ Error in Kafka consumption: {e}")
+                await asyncio.sleep(1)
+
+manager = ConnectionManager()
 
 
 @app.on_event("startup")
@@ -104,6 +195,12 @@ async def startup_event():
     print("👂 Starting Kafka Consumer API Server...")
     consumer = create_consumer()
     print("✅ Consumer initialized")
+    
+    # Set consumer in connection manager
+    manager.set_consumer(consumer)
+    
+    # Start Kafka consumption for WebSocket clients
+    asyncio.create_task(manager.start_kafka_consumption())
 
 
 @app.on_event("shutdown")
@@ -236,6 +333,84 @@ async def list_topics():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list topics: {str(e)}")
+
+
+@app.post("/chat/messages")
+async def get_chat_messages(request: ChatMessageRequest):
+    """Get chat messages from the anonymous-anime-universe topic."""
+    global consumer
+    
+    if not consumer:
+        raise HTTPException(status_code=500, detail="Consumer not initialized")
+    
+    try:
+        # Subscribe to the chat topic
+        consumer.subscribe([request.topic])
+        
+        messages = []
+        message_count = 0
+        max_messages = 50  # Get more messages for chat
+        
+        # Poll for messages
+        while message_count < max_messages:
+            msg = consumer.poll(1.0)  # Short timeout for real-time feel
+            
+            if msg is None:
+                break
+            
+            if msg.error():
+                if msg.error().code() == KafkaError._PARTITION_EOF:
+                    break
+                else:
+                    raise HTTPException(status_code=500, detail=f"Kafka error: {msg.error()}")
+            
+            # Process the message
+            try:
+                # Decode the message
+                message_str = msg.value().decode('utf-8')
+                message_data = json.loads(message_str)
+                
+                # Filter for chat messages only
+                if message_data.get("type") == "chat_message":
+                    message_info = MessageInfo(
+                        topic=msg.topic(),
+                        partition=msg.partition(),
+                        offset=msg.offset(),
+                        key=msg.key().decode('utf-8') if msg.key() else None,
+                        value=message_data,
+                        timestamp=datetime.now().isoformat()
+                    )
+                    
+                    messages.append(message_info)
+                    message_count += 1
+                
+            except json.JSONDecodeError:
+                print(f"Failed to decode JSON message: {msg.value()}")
+            except Exception as e:
+                print(f"Error processing message: {e}")
+        
+        return {
+            "success": True,
+            "messages": messages,
+            "count": len(messages),
+            "topic": request.topic
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get chat messages: {str(e)}")
+
+
+@app.websocket("/ws/chat")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time chat messages."""
+    await manager.connect(websocket)
+    
+    try:
+        while True:
+            # Keep the connection alive
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 
 @app.get("/messages/{topic}", response_model=List[MessageInfo])

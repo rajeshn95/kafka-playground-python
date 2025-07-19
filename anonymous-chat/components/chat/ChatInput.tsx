@@ -11,12 +11,14 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  isConnected?: boolean;
 }
 
 export function ChatInput({
   onSendMessage,
   disabled = false,
   placeholder = "Type your message...",
+  isConnected = true,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -92,8 +94,16 @@ export function ChatInput({
           </Button>
         </div>
 
+        {/* Connection Status */}
+        {!isConnected && (
+          <div className="mt-4 flex items-center gap-3 text-sm text-red-300 animate-fade-in">
+            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+            <span className="font-medium">Connecting to chat service...</span>
+          </div>
+        )}
+
         {/* Typing Indicator */}
-        {isTyping && (
+        {isTyping && isConnected && (
           <div className="mt-4 flex items-center gap-3 text-sm text-purple-300 animate-fade-in">
             <div className="flex gap-1">
               <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>

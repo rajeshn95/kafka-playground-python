@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { generateUsername } from "@/lib/username-generator";
+import {
+  getSimpleChatService,
+  ChatMessage as ChatMessageType,
+} from "@/lib/simple-chat-service";
 import { Sparkles, Star, Heart } from "lucide-react";
 
 interface Message {
@@ -26,10 +30,13 @@ export function ChatContainer({
   username,
 }: ChatContainerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [onlineUsers] = useState(Math.floor(Math.random() * 50) + 10);
-  const [isConnected] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState(
+    Math.floor(Math.random() * 50) + 10
+  );
+  const [isConnected, setIsConnected] = useState(false);
   const [currentUsername, setCurrentUsername] = useState(username || "");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const chatServiceRef = useRef(getSimpleChatService());
 
   // Generate username on component mount
   useEffect(() => {
@@ -37,6 +44,71 @@ export function ChatContainer({
       const newUsername = generateUsername();
       setCurrentUsername(newUsername);
     }
+  }, []); // Only run once on mount
+
+  // Initialize chat service
+  useEffect(() => {
+    if (!currentUsername) return; // Don't connect until username is set
+
+    const chatService = chatServiceRef.current;
+    console.log("🔄 Setting up chat service for username:", currentUsername);
+
+    // Track if component is mounted to prevent state updates on unmounted component
+    let isMounted = true;
+
+    // Configure chat service callbacks
+    const config = {
+      onConnect: () => {
+        if (!isMounted) return;
+        console.log("✅ Connected to chat service");
+        setIsConnected(true);
+        setOnlineUsers((prev) => prev + 1);
+      },
+      onDisconnect: () => {
+        if (!isMounted) return;
+        console.log("🔌 Disconnected from chat service");
+        setIsConnected(false);
+        setOnlineUsers((prev) => Math.max(prev - 1, 0));
+      },
+      onMessage: (chatMessage: ChatMessageType) => {
+        if (!isMounted) return;
+        console.log("📨 Received message:", chatMessage);
+        // Convert chat service message to local message format
+        const message: Message = {
+          id: chatMessage.id,
+          text: chatMessage.text,
+          username: chatMessage.username,
+          timestamp: chatMessage.timestamp,
+          isOwn: chatMessage.username === currentUsername,
+          mood: getRandomMood(),
+        };
+
+        setMessages((prev) => [...prev, message]);
+      },
+      onError: (error: string) => {
+        if (!isMounted) return;
+        console.error("❌ Chat service error:", error);
+        setIsConnected(false);
+      },
+    };
+
+    // Set the config
+    chatService.config = config;
+
+    // Connect to chat service
+    console.log("🔄 Attempting to connect to WebSocket...");
+    chatService.connect().catch((error) => {
+      if (!isMounted) return;
+      console.error("❌ Failed to connect to chat service:", error);
+      setIsConnected(false);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      console.log("🔌 Cleaning up chat service connection");
+      isMounted = false;
+      chatService.disconnect();
+    };
   }, [currentUsername]);
 
   // Auto-scroll to bottom when new messages arrive
@@ -46,57 +118,49 @@ export function ChatContainer({
     }
   }, [messages]);
 
-  const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
-
+  const getRandomMood = (): "happy" | "excited" | "cool" | "mysterious" => {
     const moods: Array<"happy" | "excited" | "cool" | "mysterious"> = [
       "happy",
       "excited",
       "cool",
       "mysterious",
     ];
-    const randomMood = moods[Math.floor(Math.random() * moods.length)];
+    return moods[Math.floor(Math.random() * moods.length)];
+  };
 
-    const newMessage: Message = {
-      id: `local-${Date.now()}`,
+  const sendMessage = async (text: string) => {
+    if (!text.trim()) return;
+
+    console.log("🚀 Sending message:", {
       text,
       username: currentUsername,
-      timestamp: new Date().toISOString(),
-      isOwn: true,
-      mood: randomMood,
-    };
-    setMessages((prev) => [...prev, newMessage]);
+      room: roomName,
+    });
 
-    // Simulate receiving anime-style responses
-    setTimeout(() => {
-      const animeResponses = [
-        { text: "Sugoi! That's amazing! ✨", mood: "excited" as const },
-        { text: "Kawaii desu ne~ 🌸", mood: "happy" as const },
-        { text: "Nani?! Really?! 😱", mood: "excited" as const },
-        { text: "Sou desu ka... interesting 🤔", mood: "cool" as const },
-        { text: "Arigatou gozaimasu! 🙏", mood: "happy" as const },
-        { text: "Yabai! That's crazy! 🔥", mood: "excited" as const },
-        {
-          text: "Mysterious... like a shadow in the moonlight 🌙",
-          mood: "mysterious" as const,
-        },
-        { text: "Ganbatte! You can do it! 💪", mood: "excited" as const },
-        { text: "Oishii! Sounds delicious! 🍜", mood: "happy" as const },
-        { text: "Kakkoii! So cool! ⚡", mood: "cool" as const },
-      ];
+    // Send message through chat service
+    const chatService = chatServiceRef.current;
+    const success = await chatService.sendMessage(
+      currentUsername,
+      text,
+      roomName
+    );
 
-      const randomResponse =
-        animeResponses[Math.floor(Math.random() * animeResponses.length)];
-      const responseMessage: Message = {
-        id: `response-${Date.now()}`,
-        text: randomResponse.text,
-        username: generateUsername(),
+    if (success) {
+      console.log("✅ Message sent successfully");
+      // Add message to local state immediately for optimistic UI
+      const newMessage: Message = {
+        id: `local-${Date.now()}`,
+        text,
+        username: currentUsername,
         timestamp: new Date().toISOString(),
-        isOwn: false,
-        mood: randomResponse.mood,
+        isOwn: true,
+        mood: getRandomMood(),
       };
-      setMessages((prev) => [...prev, responseMessage]);
-    }, 1000 + Math.random() * 3000);
+      setMessages((prev) => [...prev, newMessage]);
+    } else {
+      console.error("❌ Failed to send message");
+      // You could show a toast notification here
+    }
   };
 
   return (
@@ -184,8 +248,13 @@ export function ChatContainer({
         {/* Input */}
         <ChatInput
           onSendMessage={sendMessage}
-          disabled={false}
-          placeholder="Type your message to the anime dimension... ✨"
+          disabled={!isConnected}
+          placeholder={
+            isConnected
+              ? "Type your message to the anime dimension... ✨"
+              : "Connecting to chat service..."
+          }
+          isConnected={isConnected}
         />
       </div>
     </div>

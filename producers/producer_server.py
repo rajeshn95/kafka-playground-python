@@ -25,6 +25,12 @@ class MessageRequest(BaseModel):
     partition: Optional[int] = None
 
 
+class ChatMessageRequest(BaseModel):
+    username: str
+    text: str
+    room: str = "anonymous-anime-universe"
+
+
 class MessageResponse(BaseModel):
     success: bool
     message: str
@@ -233,6 +239,50 @@ async def produce_batch_messages(messages: list[MessageRequest]):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to produce batch messages: {str(e)}")
+
+
+@app.post("/chat/send")
+async def send_chat_message(request: ChatMessageRequest):
+    """Send a chat message to the anonymous-anime-universe topic."""
+    global producer
+    
+    if not producer:
+        raise HTTPException(status_code=500, detail="Producer not initialized")
+    
+    try:
+        # Create chat message structure
+        chat_message = {
+            "username": request.username,
+            "text": request.text,
+            "room": request.room,
+            "timestamp": datetime.now().isoformat(),
+            "message_id": f"msg_{int(time.time() * 1000)}",
+            "type": "chat_message"
+        }
+        
+        # Convert to JSON string
+        message_str = json.dumps(chat_message)
+        
+        # Produce the message to the chat topic
+        producer.produce(
+            topic=request.room,
+            key=request.username.encode('utf-8'),
+            value=message_str.encode('utf-8'),
+            callback=delivery_report
+        )
+        
+        # Flush to ensure message is sent
+        producer.flush()
+        
+        return {
+            "success": True,
+            "message": "Chat message sent successfully",
+            "message_id": chat_message["message_id"],
+            "timestamp": chat_message["timestamp"]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send chat message: {str(e)}")
 
 
 @app.post("/produce-simple")
