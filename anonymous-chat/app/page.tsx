@@ -43,29 +43,7 @@ export default function Home() {
       <div className="relative z-10 max-w-7xl mx-auto p-6">
         {/* Header with Theme Toggle */}
         <div className="flex justify-between items-start mb-16">
-          <div className="text-center flex-1">
-            <div className="inline-flex items-center gap-4 mb-6">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse-slow">
-                  <MessageCircle className="w-8 h-8 text-white" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
-              </div>
-              <div>
-                <h1 className="text-6xl font-bold bg-gradient-to-r from-foreground via-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Anonymous Chat
-                </h1>
-                <p className="text-lg text-muted-foreground mt-2">
-                  Powered by Apache Kafka
-                </p>
-              </div>
-            </div>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
-              Experience real-time anonymous messaging with beautiful design.
-              Connect with people around the world without revealing your
-              identity. Every message is encrypted and ephemeral.
-            </p>
-          </div>
+          <div className="text-center flex-1"></div>
           <div className="ml-6">
             <ThemeToggle />
           </div>
@@ -76,7 +54,7 @@ export default function Home() {
           className="mb-16 animate-fade-in"
           style={{ animationDelay: "0.3s" }}
         >
-          <ChatContainer roomName="Global Anonymous Chat" />
+          <ChatContainer roomName="Anonymous Chat" />
         </div>
 
         {/* Footer */}
@@ -106,17 +84,9 @@ export default function Home() {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Sparkles className="w-5 h-5 text-yellow-500" />
             <p className="text-lg font-medium text-foreground">
-              Built for learning Apache Kafka with real-time messaging
+              Built for learning Kafka with real-time messaging
             </p>
             <Sparkles className="w-5 h-5 text-yellow-500" />
-          </div>
-
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Rocket className="w-5 h-5 text-blue-500" />
-            <p className="text-base text-foreground">
-              Experience the future of anonymous communication
-            </p>
-            <Rocket className="w-5 h-5 text-blue-500" />
           </div>
 
           <div className="flex items-center justify-center gap-2">
