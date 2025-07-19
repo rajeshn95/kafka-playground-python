@@ -9,7 +9,9 @@ import os
 import time
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from confluent_kafka import Consumer, KafkaError
 import uvicorn
@@ -91,6 +93,9 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Templates for HTML pages
+templates = Jinja2Templates(directory="consumers/templates")
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -110,9 +115,15 @@ async def shutdown_event():
         print("🔚 Consumer API Server shutdown")
 
 
-@app.get("/", response_model=Dict[str, str])
-async def root():
-    """Root endpoint with API information."""
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Serve the consumer web interface."""
+    return templates.TemplateResponse("consumer.html", {"request": request})
+
+
+@app.get("/api", response_model=Dict[str, str])
+async def api_info():
+    """API information endpoint."""
     return {
         "message": "Kafka Consumer API Server",
         "version": "1.0.0",

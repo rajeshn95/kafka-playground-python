@@ -9,7 +9,9 @@ import os
 import time
 from datetime import datetime
 from typing import Dict, Any, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from confluent_kafka import Producer
 import uvicorn
@@ -84,6 +86,9 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Templates for HTML pages
+templates = Jinja2Templates(directory="producers/templates")
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -103,9 +108,15 @@ async def shutdown_event():
         print("🔚 Producer API Server shutdown")
 
 
-@app.get("/", response_model=Dict[str, str])
-async def root():
-    """Root endpoint with API information."""
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Serve the producer web interface."""
+    return templates.TemplateResponse("producer.html", {"request": request})
+
+
+@app.get("/api", response_model=Dict[str, str])
+async def api_info():
+    """API information endpoint."""
     return {
         "message": "Kafka Producer API Server",
         "version": "1.0.0",
@@ -222,6 +233,47 @@ async def produce_batch_messages(messages: list[MessageRequest]):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to produce batch messages: {str(e)}")
+
+
+@app.post("/produce-simple")
+async def produce_simple_message(request: Request):
+    """Simple endpoint for web form submissions."""
+    global producer
+    
+    if not producer:
+        raise HTTPException(status_code=500, detail="Producer not initialized")
+    
+    try:
+        form_data = await request.form()
+        topic = form_data.get("topic", "test-topic")
+        key = form_data.get("key", "")
+        message_text = form_data.get("message", "")
+        
+        # Create a structured message
+        message = {
+            "text": message_text,
+            "timestamp": datetime.now().isoformat(),
+            "source": "web-interface",
+            "user_input": True
+        }
+        
+        message_str = json.dumps(message)
+        
+        # Produce the message
+        producer.produce(
+            topic=topic,
+            key=key.encode('utf-8') if key else None,
+            value=message_str.encode('utf-8'),
+            callback=delivery_report
+        )
+        
+        # Flush to ensure message is sent
+        producer.flush()
+        
+        return {"success": True, "message": "Message sent successfully!"}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 if __name__ == "__main__":
