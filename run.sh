@@ -22,6 +22,7 @@ echo "📊 Access Points:"
 echo "🌐 Confluent Control Center: http://localhost:9021"
 echo "📡 Kafka Broker: localhost:9092"
 echo "🦒 Zookeeper: localhost:2181"
+echo "💬 Anonymous Chat App: http://localhost:3000"
 echo ""
 
 echo "✅ Kafka Playground is running!"

@@ -123,6 +123,7 @@ Both producer and consumer services expose HTTP APIs:
 - **Anonymous Chat**: `http://localhost:3000` - Real-time chat with Kafka
 - **WebSocket Connection**: Real-time message delivery
 - **Modern UI**: Built with Next.js, TypeScript, and shadcn/ui
+- **Auto-generated Usernames**: Anime-themed usernames for anonymous chat
 
 ### 5. Advanced Topics
 
@@ -269,7 +270,7 @@ open http://localhost:9021
    - Verify environment variables
    - Check consumer server logs
 
-4. **React Errors**
+4. **Chat Application Issues**
    - Clear browser cache
    - Check browser console for errors
    - Restart the chat application
