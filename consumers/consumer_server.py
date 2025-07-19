@@ -151,11 +151,14 @@ class ConnectionManager:
         # Subscribe to the chat topic
         self.consumer.subscribe(['anonymous-anime-universe'])
         
-        while self.is_consuming and self.active_connections:
+        while self.is_consuming:
             try:
-                msg = self.consumer.poll(1.0)
+                # Use a shorter poll timeout to prevent blocking
+                msg = self.consumer.poll(0.1)
                 
                 if msg is None:
+                    # Give other tasks a chance to run
+                    await asyncio.sleep(0.1)
                     continue
                 
                 if msg.error():
@@ -173,8 +176,11 @@ class ConnectionManager:
                     # Filter for chat messages
                     if message_data.get("type") == "chat_message":
                         # Broadcast to all connected WebSocket clients
-                        await self.broadcast(message_str)
-                        print(f"📡 Broadcasted message: {message_data['username']}: {message_data['text']}")
+                        if self.active_connections:
+                            await self.broadcast(message_str)
+                            print(f"📡 Broadcasted message: {message_data['username']}: {message_data['text']}")
+                        else:
+                            print(f"📨 Received message but no active connections: {message_data['username']}: {message_data['text']}")
                 
                 except json.JSONDecodeError:
                     print(f"❌ Failed to decode JSON message: {msg.value()}")
@@ -199,8 +205,10 @@ async def startup_event():
     # Set consumer in connection manager
     manager.set_consumer(consumer)
     
-    # Start Kafka consumption for WebSocket clients
+    # Start Kafka consumption for WebSocket clients in background
+    print("🔄 Starting background Kafka consumption...")
     asyncio.create_task(manager.start_kafka_consumption())
+    print("✅ Background Kafka consumption started")
 
 
 @app.on_event("shutdown")
@@ -407,9 +415,18 @@ async def websocket_endpoint(websocket: WebSocket):
     
     try:
         while True:
-            # Keep the connection alive
-            await websocket.receive_text()
+            # Keep the connection alive by waiting for any message (ping/pong or text)
+            try:
+                # Wait for any message with a timeout
+                await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+            except asyncio.TimeoutError:
+                # Send a ping to keep the connection alive
+                await websocket.ping()
+            except WebSocketDisconnect:
+                break
     except WebSocketDisconnect:
+        pass
+    finally:
         manager.disconnect(websocket)
 
 

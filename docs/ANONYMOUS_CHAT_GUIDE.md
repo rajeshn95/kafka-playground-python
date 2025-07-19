@@ -2,20 +2,21 @@
 
 ## 🎯 Overview
 
-The Anonymous Chat application is a real-time messaging platform built with Next.js, TypeScript, and shadcn/ui, powered by Apache Kafka for message streaming. It demonstrates how to build a modern, scalable chat application using event-driven architecture.
+The Anonymous Chat application is a real-time messaging platform built with Next.js, TypeScript, and shadcn/ui, powered by Apache Kafka for message streaming. It demonstrates how to build a modern, scalable chat application using event-driven architecture with WebSocket connections for real-time communication.
 
 ## 🚀 Features
 
 ### Core Features
 
-- **Real-time Messaging**: Instant message delivery using Kafka streams
-- **Anonymous Users**: Chat without revealing your identity
+- **Real-time Messaging**: Instant message delivery using Kafka streams and WebSocket connections
+- **Anonymous Users**: Chat without revealing your identity with auto-generated usernames
 - **Modern UI**: Beautiful interface built with shadcn/ui components
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Auto-scroll**: Messages automatically scroll to the latest
-- **User Avatars**: Colorful avatars with user initials
+- **User Avatars**: Colorful avatars with user initials and mood indicators
 - **Message Timestamps**: Real-time message timestamps
 - **Online Users**: Display number of online users
+- **Connection Status**: Real-time connection status indicators
 
 ### Technical Features
 
@@ -25,26 +26,48 @@ The Anonymous Chat application is a real-time messaging platform built with Next
 - **Tailwind CSS**: Utility-first styling
 - **Docker**: Containerized deployment
 - **Kafka Integration**: Real-time message streaming
+- **WebSocket**: Real-time bidirectional communication
+- **CORS Support**: Cross-origin resource sharing enabled
 
 ## 🏗️ Architecture
+
+### System Architecture
+
+```
+┌─────────────────┐    HTTP POST    ┌─────────────────┐
+│   Frontend      │ ──────────────► │  Producer API   │
+│  (Next.js)      │                 │   (FastAPI)     │
+│                 │                 │                 │
+│  WebSocket      │ ◄────────────── │  Consumer API   │
+│  Connection     │   Real-time     │   (FastAPI)     │
+└─────────────────┘    Messages     └─────────────────┘
+                              │
+                              ▼
+                    ┌─────────────────┐
+                    │   Apache Kafka  │
+                    │   (Message      │
+                    │    Broker)      │
+                    └─────────────────┘
+```
 
 ### Frontend Architecture
 
 ```
 anonymous-chat/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx              # Main page component
-│   │   └── globals.css           # Global styles
-│   ├── components/
-│   │   ├── ui/                   # shadcn/ui components
-│   │   └── chat/                 # Chat-specific components
-│   │       ├── ChatContainer.tsx # Main chat container
-│   │       ├── ChatHeader.tsx    # Chat header with stats
-│   │       ├── ChatInput.tsx     # Message input component
-│   │       └── ChatMessage.tsx   # Individual message component
-│   └── lib/
-│       └── utils.ts              # Utility functions
+├── app/
+│   ├── page.tsx              # Main page component
+│   ├── layout.tsx            # Root layout
+│   └── globals.css           # Global styles
+├── components/
+│   ├── ui/                   # shadcn/ui components
+│   └── chat/                 # Chat-specific components
+│       ├── ChatContainer.tsx # Main chat container
+│       ├── ChatHeader.tsx    # Chat header with stats
+│       ├── ChatInput.tsx     # Message input component
+│       └── ChatMessage.tsx   # Individual message component
+└── lib/
+    ├── simple-chat-service.ts # WebSocket chat service
+    └── username-generator.ts  # Username generation utility
 ```
 
 ### Component Hierarchy
@@ -61,10 +84,10 @@ Page
 ### Data Flow
 
 1. **User Input**: User types message in ChatInput
-2. **Message Send**: Message sent to Kafka producer API
-3. **Kafka Storage**: Message stored in `anonymous-chat` topic
-4. **Message Polling**: Consumer API polls for new messages
-5. **UI Update**: Messages displayed in real-time
+2. **Message Send**: Message sent to Producer API via HTTP POST
+3. **Kafka Storage**: Message stored in `anonymous-anime-universe` topic
+4. **Real-time Delivery**: Consumer API broadcasts messages via WebSocket
+5. **UI Update**: Messages displayed in real-time in frontend
 
 ## 🛠️ Technology Stack
 
@@ -79,8 +102,10 @@ Page
 ### Backend Integration
 
 - **Kafka Producer API**: Message production (port 8001)
-- **Kafka Consumer API**: Message consumption (port 8002)
+- **Kafka Consumer API**: Message consumption and WebSocket (port 8002)
 - **Apache Kafka**: Message streaming platform
+- **FastAPI**: Modern Python web framework
+- **WebSocket**: Real-time bidirectional communication
 
 ### Deployment
 
@@ -137,17 +162,18 @@ docker compose up -d anonymous-chat
 
 The main orchestrator component that:
 
-- Manages message state and polling
-- Handles API communication
-- Provides real-time updates
-- Manages user sessions
+- Manages WebSocket connection lifecycle
+- Handles message state and real-time updates
+- Provides connection status management
+- Manages user sessions and username generation
 
 **Key Features:**
 
-- Auto-scroll to latest messages
-- Polling for new messages every 2 seconds
-- Unique message deduplication
-- Local message state management
+- WebSocket connection management with auto-reconnect
+- Real-time message updates via WebSocket
+- Connection status indicators
+- Optimistic UI updates
+- Component lifecycle management
 
 ### ChatHeader
 
@@ -156,7 +182,8 @@ Displays chat room information:
 - Room name and description
 - Online user count
 - Total message count
-- Real-time statistics
+- Real-time connection status
+- Visual connection indicators
 
 ### ChatMessage
 
@@ -166,6 +193,7 @@ Renders individual messages with:
 - Message content with proper formatting
 - Timestamp display
 - Own vs other user styling
+- Mood indicators (happy, excited, cool, mysterious)
 - Responsive layout
 
 ### ChatInput
@@ -177,6 +205,7 @@ Handles message composition:
 - Enter key support (Shift+Enter for new line)
 - Disabled state when disconnected
 - Auto-resize functionality
+- Character count display
 
 ## 🔄 Message Flow
 
@@ -186,28 +215,28 @@ Handles message composition:
 2. Message data structured:
    ```json
    {
-     "text": "Hello world!",
      "username": "Anonymous_abc123",
-     "timestamp": "2024-01-15T10:30:00.000Z",
-     "room": "General Chat"
+     "text": "Hello world!",
+     "room": "anonymous-anime-universe"
    }
    ```
-3. Data sent to producer API via FormData
-4. Message stored in Kafka topic `anonymous-chat`
+3. Data sent to producer API via HTTP POST
+4. Message stored in Kafka topic `anonymous-anime-universe`
 
-### Message Consumption
+### Message Consumption & Broadcasting
 
-1. Consumer API polls for new messages every 2 seconds
+1. Consumer API continuously polls Kafka for new messages
 2. Messages retrieved from Kafka topic
-3. Data transformed for UI display
-4. Messages added to local state
-5. UI updated with new messages
+3. Messages broadcasted to all connected WebSocket clients
+4. Frontend receives messages via WebSocket
+5. UI updated with new messages in real-time
 
 ### Real-time Updates
 
-- **Polling Interval**: 2 seconds
-- **Message Deduplication**: Based on topic-partition-offset
-- **Auto-scroll**: Automatic scroll to latest message
+- **WebSocket Connection**: Persistent bidirectional connection
+- **Auto-reconnect**: Automatic reconnection on connection loss
+- **Message Broadcasting**: Real-time message delivery to all clients
+- **Connection Status**: Real-time connection status updates
 - **Optimistic Updates**: Local message display before confirmation
 
 ## 🔧 Configuration
@@ -215,18 +244,18 @@ Handles message composition:
 ### Environment Variables
 
 ```bash
-# Next.js Configuration
-NODE_ENV=production
-NEXT_TELEMETRY_DISABLED=1
+# Frontend Configuration
+NEXT_PUBLIC_PRODUCER_URL=http://localhost:8001
+NEXT_PUBLIC_CONSUMER_URL=http://localhost:8002
+NEXT_PUBLIC_TOPIC_NAME=anonymous-anime-universe
 
-# API Endpoints (default)
-PRODUCER_API_URL=http://localhost:8001
-CONSUMER_API_URL=http://localhost:8002
+# Backend Configuration
+KAFKA_BOOTSTRAP_SERVERS=kafka:29092
 ```
 
 ### Kafka Topic Configuration
 
-- **Topic Name**: `anonymous-chat`
+- **Topic Name**: `anonymous-anime-universe`
 - **Partitions**: 1 (default)
 - **Replication Factor**: 1 (development)
 - **Retention**: Default Kafka retention
@@ -236,125 +265,44 @@ CONSUMER_API_URL=http://localhost:8002
 #### Producer API
 
 ```http
-POST /produce-simple
-Content-Type: application/x-www-form-urlencoded
+POST /chat/send
+Content-Type: application/json
 
-topic=anonymous-chat
-key=Anonymous_abc123
-message={"text":"Hello","username":"Anonymous_abc123","timestamp":"2024-01-15T10:30:00.000Z","room":"General Chat"}
+{
+  "username": "Anonymous_abc123",
+  "text": "Hello world!",
+  "room": "anonymous-anime-universe"
+}
 ```
 
 #### Consumer API
 
 ```http
+# WebSocket endpoint for real-time messages
+WS /ws/chat
+
+# Health check
+GET /health
+
+# Consume messages (for debugging)
 POST /consume
-Content-Type: application/json
-
-{
-  "topic": "anonymous-chat",
-  "max_messages": 50,
-  "timeout": 2.0
-}
 ```
 
-## 🐳 Docker Deployment
+## 🔒 Security & Best Practices
 
-### Dockerfile Structure
+### Frontend Security
 
-```dockerfile
-# Multi-stage build for optimization
-FROM node:18-alpine AS base
-FROM base AS deps
-FROM base AS builder
-FROM base AS runner
-
-# Production optimizations
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-```
-
-### Docker Compose Integration
-
-```yaml
-anonymous-chat:
-  build:
-    context: ./anonymous-chat
-    dockerfile: Dockerfile
-  container_name: anonymous-chat-app
-  depends_on:
-    - producer-server
-    - consumer-server
-  ports:
-    - "3000:3000"
-  environment:
-    - NODE_ENV=production
-  restart: unless-stopped
-```
-
-### Build Commands
-
-```bash
-# Build image
-docker compose build anonymous-chat
-
-# Run container
-docker compose up -d anonymous-chat
-
-# View logs
-docker compose logs -f anonymous-chat
-
-# Stop container
-docker compose stop anonymous-chat
-```
-
-## 🧪 Development
-
-### Available Scripts
-
-```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
-```
-
-### Code Style
-
-- **TypeScript**: Strict type checking
-- **ESLint**: Code linting and formatting
-- **Prettier**: Code formatting
-- **Tailwind CSS**: Utility-first styling
-
-### Component Development
-
-1. **Create Component**: Add new component in `src/components/`
-2. **Add Types**: Define TypeScript interfaces
-3. **Add Styling**: Use Tailwind CSS classes
-4. **Test**: Verify component functionality
-5. **Document**: Update this guide
-
-## 🔒 Security Considerations
-
-### Anonymous Users
-
-- No personal data collection
-- Random username generation
-- No persistent user sessions
-- No authentication required
-
-### Input Validation
-
-- Client-side validation
-- Message length limits
+- No sensitive data in messages
+- Username generation without personal info
 - XSS protection via React
 - Content sanitization
 
 ### API Security
 
 - CORS configuration for development
-- No sensitive data in messages
+- Input validation via Pydantic models
+- Error handling and logging
 - Rate limiting considerations
-- Error handling
 
 ## 📱 Responsive Design
 
@@ -395,6 +343,7 @@ npm run lint     # Run ESLint
 - Component architecture
 - API integration
 - State management
+- WebSocket implementation
 
 ### Demonstrations
 
@@ -461,131 +410,55 @@ curl http://localhost:8001/health
 # Check consumer API
 curl http://localhost:8002/health
 
-# Check Kafka
+# Check Kafka connection
 docker compose logs kafka
 ```
 
-### Debug Mode
+#### WebSocket Issues
 
 ```bash
-# Development with debug
-NODE_ENV=development npm run dev
+# Check WebSocket connection
+# Open browser dev tools and look for WebSocket in Network tab
 
-# Docker with debug
-docker compose up anonymous-chat
+# Check consumer logs for WebSocket activity
+docker compose logs consumer-server | grep -E "(WebSocket|connection)"
 ```
 
-## 📚 API Reference
+### Debugging
 
-### Message Format
+#### Frontend Debugging
 
-```typescript
-interface Message {
-  id: string;
-  text: string;
-  username: string;
-  timestamp: string;
-  isOwn: boolean;
-}
-```
+1. Open browser developer tools
+2. Check Console for error messages
+3. Check Network tab for WebSocket connections
+4. Verify environment variables are set correctly
 
-### Component Props
+#### Backend Debugging
 
-```typescript
-interface ChatContainerProps {
-  roomName?: string;
-  username?: string;
-}
+1. Check service logs:
 
-interface ChatMessageProps {
-  message: Message;
-}
+   ```bash
+   docker compose logs producer-server
+   docker compose logs consumer-server
+   ```
 
-interface ChatInputProps {
-  onSendMessage: (message: string) => void;
-  disabled?: boolean;
-  placeholder?: string;
-}
-```
+2. Test API endpoints:
 
-## 🎨 Customization
+   ```bash
+   curl http://localhost:8001/health
+   curl http://localhost:8002/health
+   ```
 
-### Styling
+3. Check Kafka topics:
+   ```bash
+   # Access Kafka Control Center
+   open http://localhost:9021
+   ```
 
-- Modify `src/app/globals.css` for global styles
-- Update component styles in individual files
-- Customize Tailwind configuration
-- Add custom CSS variables
+## 📚 Additional Resources
 
-### Features
-
-- Add new chat rooms
-- Implement user authentication
-- Add file sharing
-- Include emoji support
-- Add message reactions
-- Implement typing indicators
-
-### Theming
-
-- Dark mode support
-- Custom color schemes
-- Brand customization
-- Accessibility improvements
-
-## 🤝 Contributing
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-### Code Standards
-
-- Follow TypeScript best practices
-- Use ESLint and Prettier
-- Write meaningful commit messages
-- Add documentation for new features
-
-## 📄 License
-
-This project is part of the Kafka Playground and is licensed under the MIT License.
-
-## 🆘 Support
-
-For issues and questions:
-
-1. Check the main project README
-2. Review the troubleshooting guide
-3. Check the web interfaces guide
-4. Open an issue on GitHub
-
----
-
-**Enjoy chatting anonymously with Kafka!** 🎉
-
-## 📊 Performance Metrics
-
-### Build Metrics
-
-- **Build Time**: ~30 seconds
-- **Bundle Size**: ~2MB (gzipped)
-- **Docker Image Size**: ~200MB
-- **Startup Time**: ~10 seconds
-
-### Runtime Metrics
-
-- **Message Polling**: 2-second intervals
-- **UI Updates**: < 100ms
-- **Memory Usage**: ~50MB
-- **CPU Usage**: < 5%
-
-### Scalability
-
-- **Concurrent Users**: 100+ (theoretical)
-- **Message Throughput**: 1000+ messages/second
-- **Horizontal Scaling**: Via Docker Compose
-- **Load Balancing**: Via reverse proxy
+- [Next.js Documentation](https://nextjs.org/docs)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
+- [WebSocket API Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
+- [shadcn/ui Documentation](https://ui.shadcn.com/)
