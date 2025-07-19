@@ -26,7 +26,11 @@ export default function Home() {
 
       {/* Main Chat Container */}
       <div className="relative z-10 max-w-5xl mx-auto my-auto px-6 py-6">
-        <ChatContainer roomName="Anime Chat Universe " />
+        <ChatContainer
+          roomName={
+            process.env.NEXT_PUBLIC_TOPIC_NAME || "anonymous-anime-universe"
+          }
+        />
       </div>
 
       <div

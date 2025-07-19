@@ -120,6 +120,7 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_PRODUCER_URL=http://localhost:8001
       - NEXT_PUBLIC_CONSUMER_URL=http://localhost:8002
+      - NEXT_PUBLIC_TOPIC_NAME=anonymous-anime-universe
     restart: unless-stopped
 
 volumes:

@@ -9,8 +9,8 @@ export interface ChatMessage {
 }
 
 export interface SimpleChatServiceConfig {
-  producerUrl?: string;
-  consumerUrl?: string;
+  producerUrl: string;
+  consumerUrl: string;
   onMessage?: (message: ChatMessage) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
@@ -24,7 +24,7 @@ export class SimpleChatService {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
 
-  constructor(config: SimpleChatServiceConfig = {}) {
+  constructor(config: Partial<SimpleChatServiceConfig> = {}) {
     this.config = {
       producerUrl:
         process.env.NEXT_PUBLIC_PRODUCER_URL || "http://localhost:8001",
@@ -37,6 +37,7 @@ export class SimpleChatService {
   async connect(): Promise<void> {
     console.log("🔄 Connecting to chat service...");
     console.log("📡 Consumer URL:", this.config.consumerUrl);
+    console.log("📡 Producer URL:", this.config.producerUrl);
 
     try {
       // Connect to WebSocket for real-time messages
@@ -109,7 +110,8 @@ export class SimpleChatService {
   async sendMessage(
     username: string,
     text: string,
-    room: string = "anonymous-anime-universe"
+    room: string = process.env.NEXT_PUBLIC_TOPIC_NAME ||
+      "anonymous-anime-universe"
   ): Promise<boolean> {
     try {
       const response = await fetch(`${this.config.producerUrl}/chat/send`, {

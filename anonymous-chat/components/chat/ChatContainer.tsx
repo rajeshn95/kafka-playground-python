@@ -25,14 +25,9 @@ interface ChatContainerProps {
   username?: string;
 }
 
-export function ChatContainer({
-  roomName = "anonymous-anime-universe",
-  username,
-}: ChatContainerProps) {
+export function ChatContainer({ roomName, username }: ChatContainerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState(
-    Math.floor(Math.random() * 50) + 10
-  );
+  const [onlineUsers, setOnlineUsers] = useState(1);
   const [isConnected, setIsConnected] = useState(false);
   const [currentUsername, setCurrentUsername] = useState(username || "");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -58,6 +53,8 @@ export function ChatContainer({
 
     // Configure chat service callbacks
     const config = {
+      producerUrl: process.env.NEXT_PUBLIC_PRODUCER_URL || "",
+      consumerUrl: process.env.NEXT_PUBLIC_CONSUMER_URL || "",
       onConnect: () => {
         if (!isMounted) return;
         console.log("✅ Connected to chat service");
@@ -172,7 +169,6 @@ export function ChatContainer({
 
         {/* Header */}
         <ChatHeader
-          roomName={roomName}
           onlineUsers={onlineUsers}
           totalMessages={messages.length}
           isConnected={isConnected}

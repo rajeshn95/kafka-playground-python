@@ -3,14 +3,13 @@
 import { Users, MessageCircle, Sparkles, Zap } from "lucide-react";
 
 interface ChatHeaderProps {
-  roomName: string;
   onlineUsers: number;
   totalMessages: number;
   isConnected?: boolean;
 }
 
 export function ChatHeader({
-  // onlineUsers,
+  onlineUsers,
   totalMessages,
   isConnected = true,
 }: ChatHeaderProps) {
@@ -66,10 +65,10 @@ export function ChatHeader({
           </div>
 
           {/* Online Users */}
-          {/* <div className="flex items-center gap-2 backdrop-blur-sm bg-white/5 rounded-full px-3 py-1 border border-white/10">
+          <div className="flex items-center gap-2 backdrop-blur-sm bg-white/5 rounded-full px-3 py-1 border border-white/10">
             <Users className="w-4 h-4 text-cyan-400 animate-pulse" />
             <span className="text-cyan-300 font-semibold">{onlineUsers}</span>
-          </div> */}
+          </div>
 
           {/* Message Count */}
           <div className="flex items-center gap-2 backdrop-blur-sm bg-white/5 rounded-full px-3 py-1 border border-white/10">

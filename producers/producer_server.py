@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from confluent_kafka import Producer
 import uvicorn
@@ -90,6 +91,15 @@ app = FastAPI(
     title="Kafka Producer API",
     description="HTTP API for producing messages to Kafka topics",
     version="1.0.0"
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 # Templates for HTML pages
