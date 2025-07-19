@@ -5,17 +5,7 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { generateUsername } from "@/lib/username-generator";
-import {
-  MessageCircle,
-  Users,
-  Zap,
-  Sparkles,
-  Globe,
-  Shield,
-  Heart,
-} from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { MessageCircle, Users, Sparkles, Star, Heart, Zap } from "lucide-react";
 
 interface Message {
   id: string;
@@ -23,6 +13,7 @@ interface Message {
   username: string;
   timestamp: string;
   isOwn: boolean;
+  mood?: "happy" | "excited" | "cool" | "mysterious";
 }
 
 interface ChatContainerProps {
@@ -31,14 +22,13 @@ interface ChatContainerProps {
 }
 
 export function ChatContainer({
-  roomName = "Anonymous Chat",
+  roomName = "anonymous-anime-universe",
   username,
 }: ChatContainerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [onlineUsers] = useState(1);
-  const [isConnected, setIsConnected] = useState(false);
+  const [onlineUsers] = useState(Math.floor(Math.random() * 50) + 10);
+  const [isConnected, setIsConnected] = useState(true);
   const [currentUsername, setCurrentUsername] = useState(username || "");
-  const [isLoading, setIsLoading] = useState(false); // Changed to false to show welcome screen
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Generate username on component mount
@@ -56,227 +46,149 @@ export function ChatContainer({
     }
   }, [messages]);
 
-  // Poll for new messages from Kafka consumer API (only if backend is available)
-  useEffect(() => {
-    const pollMessages = async () => {
-      try {
-        const response = await fetch("http://localhost:8002/consume", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            topic: "anonymous-chat",
-            max_messages: 50,
-            timeout: 2.0,
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success && result.messages) {
-            const newMessages = result.messages.map(
-              (msg: {
-                topic: string;
-                partition: number;
-                offset: number;
-                value: {
-                  text?: string;
-                  message?: string;
-                  username?: string;
-                  timestamp?: string;
-                };
-                timestamp?: string;
-              }) => ({
-                id: `${msg.topic}-${msg.partition}-${msg.offset}`,
-                text: msg.value.text || msg.value.message || "Unknown message",
-                username: msg.value.username || "Anonymous",
-                timestamp: msg.value.timestamp || msg.timestamp,
-                isOwn: msg.value.username === currentUsername,
-              })
-            );
-
-            setMessages((prev) => {
-              const existingIds = new Set(prev.map((m: Message) => m.id));
-              const uniqueNewMessages = newMessages.filter(
-                (m: Message) => !existingIds.has(m.id)
-              );
-              return [...prev, ...uniqueNewMessages];
-            });
-
-            setIsConnected(true);
-            setIsLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error("Error polling messages:", error);
-        setIsConnected(false);
-      }
-    };
-
-    // Only start polling if we want to connect to backend
-    // For now, let's show the welcome screen
-    // const interval = setInterval(pollMessages, 2000);
-    // return () => clearInterval(interval);
-  }, [currentUsername]);
-
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
-    // For demo purposes, add message locally
+    const moods: Array<"happy" | "excited" | "cool" | "mysterious"> = [
+      "happy",
+      "excited",
+      "cool",
+      "mysterious",
+    ];
+    const randomMood = moods[Math.floor(Math.random() * moods.length)];
+
     const newMessage: Message = {
       id: `local-${Date.now()}`,
       text,
       username: currentUsername,
       timestamp: new Date().toISOString(),
       isOwn: true,
+      mood: randomMood,
     };
     setMessages((prev) => [...prev, newMessage]);
 
-    // Try to send to backend if available
-    try {
-      const formData = new FormData();
-      formData.append("topic", "anonymous-chat");
-      formData.append("key", currentUsername);
-      formData.append(
-        "message",
-        JSON.stringify({
-          text,
-          username: currentUsername,
-          timestamp: new Date().toISOString(),
-          room: roomName,
-        })
-      );
+    // Simulate receiving anime-style responses
+    setTimeout(() => {
+      const animeResponses = [
+        { text: "Sugoi! That's amazing! ✨", mood: "excited" as const },
+        { text: "Kawaii desu ne~ 🌸", mood: "happy" as const },
+        { text: "Nani?! Really?! 😱", mood: "excited" as const },
+        { text: "Sou desu ka... interesting 🤔", mood: "cool" as const },
+        { text: "Arigatou gozaimasu! 🙏", mood: "happy" as const },
+        { text: "Yabai! That's crazy! 🔥", mood: "excited" as const },
+        {
+          text: "Mysterious... like a shadow in the moonlight 🌙",
+          mood: "mysterious" as const,
+        },
+        { text: "Ganbatte! You can do it! 💪", mood: "excited" as const },
+        { text: "Oishii! Sounds delicious! 🍜", mood: "happy" as const },
+        { text: "Kakkoii! So cool! ⚡", mood: "cool" as const },
+      ];
 
-      const response = await fetch("http://localhost:8001/produce-simple", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        setIsConnected(true);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      // Message was already added locally, so user can still see it
-    }
+      const randomResponse =
+        animeResponses[Math.floor(Math.random() * animeResponses.length)];
+      const responseMessage: Message = {
+        id: `response-${Date.now()}`,
+        text: randomResponse.text,
+        username: generateUsername(),
+        timestamp: new Date().toISOString(),
+        isOwn: false,
+        mood: randomResponse.mood,
+      };
+      setMessages((prev) => [...prev, responseMessage]);
+    }, 1000 + Math.random() * 3000);
   };
 
   return (
-    <Card className="h-[800px] flex flex-col shadow-2xl overflow-hidden border">
-      {/* Header */}
-      <ChatHeader
-        roomName={roomName}
-        onlineUsers={onlineUsers}
-        totalMessages={messages.length}
-        isConnected={isConnected}
-      />
+    <div className="relative">
+      {/* Glassmorphism Container */}
+      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl shadow-2xl overflow-hidden h-[620px] flex flex-col relative">
+        {/* Animated Border */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-3xl blur opacity-20 animate-pulse"></div>
 
-      {/* Messages Area */}
-      <div
-        ref={scrollAreaRef}
-        className="flex-1 p-8 overflow-y-auto custom-scrollbar bg-gradient-to-b from-background to-muted/20"
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="relative">
-                <div className="w-16 h-16 border-4 border-muted border-t-primary rounded-full animate-spin mx-auto mb-6"></div>
+        {/* Header */}
+        <ChatHeader
+          roomName={roomName}
+          onlineUsers={onlineUsers}
+          totalMessages={messages.length}
+          isConnected={isConnected}
+        />
+
+        {/* Messages Area */}
+        <div
+          ref={scrollAreaRef}
+          className="flex-1 overflow-y-auto px-6 py-4 relative"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(139,92,246,0.05) 0%, rgba(236,72,153,0.05) 50%, rgba(6,182,212,0.05) 100%)",
+          }}
+        >
+          {/* Floating Elements */}
+          <div className="absolute top-10 right-10 text-purple-300/30 animate-float">
+            <Star className="w-4 h-4" />
+          </div>
+          <div className="absolute bottom-20 left-10 text-pink-300/30 animate-float-delayed">
+            <Heart className="w-3 h-3" />
+          </div>
+
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center relative">
+              {/* Welcome Animation */}
+              <div className="relative mb-8">
+                <div className="w-24 h-24 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-2xl shadow-purple-500/50 animate-bounce-slow">
+                  <Sparkles className="w-12 h-12 text-white animate-spin-slow" />
+                </div>
+                <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full blur opacity-30 animate-pulse"></div>
+
+                {/* Orbiting Elements */}
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-cyan-400 rounded-full animate-orbit opacity-80">
+                  <Star className="w-4 h-4 text-white m-1" />
+                </div>
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-pink-400 rounded-full animate-orbit-reverse opacity-80">
+                  <Heart className="w-4 h-4 text-white m-1" />
+                </div>
+              </div>
+
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4 animate-gradient">
+                Welcome to the Anime Dimension! ✨
+              </h3>
+
+              <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl p-6 mb-8 max-w-md shadow-xl">
+                <p className="text-white/90 leading-relaxed mb-4">
+                  Konnichiwa! You're chatting as{" "}
+                  <span className="font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
+                    {currentUsername}
+                  </span>
+                </p>
+                <p className="text-purple-200 text-sm">
+                  Enter the magical world of anonymous anime chat! Share your
+                  thoughts with fellow otakus! 🌸
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {messages.map((message, index) => (
                 <div
-                  className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-secondary rounded-full animate-spin mx-auto"
-                  style={{
-                    animationDirection: "reverse",
-                    animationDuration: "1.5s",
-                  }}
-                ></div>
-              </div>
-              <p className="text-foreground font-medium">
-                Connecting to anonymous chat...
-              </p>
-              <p className="text-muted-foreground text-sm mt-2">
-                Establishing secure connection
-              </p>
-            </div>
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="relative mb-8">
-              <div className="w-24 h-24 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl animate-pulse-slow">
-                <Sparkles className="w-12 h-12 text-white" />
-              </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
-            </div>
-
-            <h3 className="text-2xl font-bold text-foreground mb-4">
-              Welcome to Anonymous Chat! 🎉
-            </h3>
-
-            <Card className="p-6 mb-6 max-w-md">
-              <p className="text-foreground leading-relaxed mb-4">
-                You&apos;re chatting as{" "}
-                <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500">
-                  {currentUsername}
-                </span>
-              </p>
-              <p className="text-muted-foreground text-sm">
-                Start the conversation by sending your first message! Your
-                identity is completely anonymous.
-              </p>
-            </Card>
-
-            <div className="grid grid-cols-3 gap-6 text-sm">
-              <Card className="p-4 text-center">
-                <Users className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                <div className="text-foreground font-semibold">
-                  {onlineUsers}
+                  key={message.id}
+                  className="animate-message-enter"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <ChatMessage message={message} />
                 </div>
-                <div className="text-muted-foreground text-xs">Online</div>
-              </Card>
-              <Card className="p-4 text-center">
-                <MessageCircle className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-                <div className="text-foreground font-semibold">
-                  {messages.length}
-                </div>
-                <div className="text-muted-foreground text-xs">Messages</div>
-              </Card>
-              <Card className="p-4 text-center">
-                <Zap className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
-                <div className="text-foreground font-semibold">Real-time</div>
-                <div className="text-muted-foreground text-xs">Live</div>
-              </Card>
+              ))}
             </div>
+          )}
+        </div>
 
-            <div className="mt-8 flex items-center gap-4 text-xs text-muted-foreground">
-              <Badge variant="outline" className="gap-1">
-                <Shield className="w-3 h-3" />
-                100% Anonymous
-              </Badge>
-              <Badge variant="outline" className="gap-1">
-                <Globe className="w-3 h-3" />
-                Global
-              </Badge>
-              <Badge variant="outline" className="gap-1">
-                <Heart className="w-3 h-3" />
-                Secure
-              </Badge>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
-            ))}
-          </div>
-        )}
+        {/* Input */}
+        <ChatInput
+          onSendMessage={sendMessage}
+          disabled={false}
+          placeholder="Type your message to the anime dimension... ✨"
+          username={currentUsername}
+        />
       </div>
-
-      {/* Input */}
-      <ChatInput
-        onSendMessage={sendMessage}
-        disabled={false} // Allow sending messages even without backend
-        placeholder="Type your anonymous message..."
-        username={currentUsername}
-      />
-    </Card>
+    </div>
   );
 }

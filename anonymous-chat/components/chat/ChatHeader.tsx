@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Users,
-  MessageCircle,
-  Wifi,
-  WifiOff,
-  Shield,
-  Globe,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Users, MessageCircle, Sparkles, Zap } from "lucide-react";
 
 interface ChatHeaderProps {
   roomName: string;
@@ -25,64 +16,77 @@ export function ChatHeader({
   isConnected = true,
 }: ChatHeaderProps) {
   return (
-    <Card className="rounded-none border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="p-6">
-        <div className="flex items-center justify-between">
-          {/* Room Info */}
+    <div className="relative px-6 py-4 border-b border-white/10 backdrop-blur-sm">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 animate-gradient-x"></div>
+
+      <div className="relative flex items-center justify-between">
+        {/* Room Info */}
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <MessageCircle className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-2xl shadow-purple-500/50 animate-glow">
+                <Sparkles className="w-6 h-6 text-white animate-spin-slow" />
               </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-xl blur opacity-30 animate-pulse"></div>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">{roomName}</h2>
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Shield className="w-3 h-3" />
-                Anonymous Chat Room
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-gradient">
+                ✨ Anime Chat Universe ✨
+              </h1>
+              <p className="text-purple-300 text-sm flex items-center gap-2">
+                <Zap className="w-4 h-4 animate-pulse" />
+                Enter the digital realm
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Stats */}
-          <div className="flex items-center gap-3">
-            {/* Connection Status */}
-            <Badge
-              variant={isConnected ? "default" : "destructive"}
-              className="gap-2"
+        {/* Stats */}
+        <div className="flex items-center gap-6">
+          {/* Connection Status */}
+          <div className="flex items-center gap-2">
+            <div
+              className={`w-3 h-3 rounded-full animate-pulse ${
+                isConnected ? "bg-green-400" : "bg-red-400"
+              }`}
             >
-              {isConnected ? (
-                <Wifi className="w-3 h-3" />
-              ) : (
-                <WifiOff className="w-3 h-3" />
-              )}
+              <div
+                className={`w-full h-full rounded-full animate-ping ${
+                  isConnected ? "bg-green-400" : "bg-red-400"
+                }`}
+              ></div>
+            </div>
+            <span
+              className={`text-sm font-medium ${
+                isConnected ? "text-green-300" : "text-red-300"
+              }`}
+            >
               {isConnected ? "Connected" : "Disconnected"}
-            </Badge>
+            </span>
+          </div>
 
-            {/* Online Users */}
-            <Badge variant="secondary" className="gap-2">
-              <Users className="w-3 h-3" />
-              {onlineUsers} online
-            </Badge>
+          {/* Online Users */}
+          <div className="flex items-center gap-2 backdrop-blur-sm bg-white/5 rounded-full px-3 py-1 border border-white/10">
+            <Users className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <span className="text-cyan-300 font-semibold">{onlineUsers}</span>
+          </div>
 
-            {/* Message Count */}
-            <Badge variant="outline" className="gap-2">
-              <MessageCircle className="w-3 h-3" />
-              {totalMessages} messages
-            </Badge>
+          {/* Message Count */}
+          <div className="flex items-center gap-2 backdrop-blur-sm bg-white/5 rounded-full px-3 py-1 border border-white/10">
+            <MessageCircle className="w-4 h-4 text-purple-400 animate-pulse" />
+            <span className="text-purple-300 font-semibold">
+              {totalMessages}
+            </span>
+          </div>
+
+          {/* Live Indicator */}
+          <div className="flex items-center gap-2 backdrop-blur-sm bg-white/5 rounded-full px-3 py-1 border border-white/10">
+            <Zap className="w-4 h-4 text-pink-400 animate-bounce" />
+            <span className="text-pink-300 font-semibold">LIVE</span>
           </div>
         </div>
-
-        {/* Room Description */}
-        <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <Globe className="w-4 h-4" />
-            Welcome to the anonymous chat! Share your thoughts without revealing
-            your identity. Be respectful and enjoy the conversation! 🚀
-          </p>
-        </div>
       </div>
-    </Card>
+    </div>
   );
 }
