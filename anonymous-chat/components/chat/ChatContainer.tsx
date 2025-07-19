@@ -5,7 +5,7 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { generateUsername } from "@/lib/username-generator";
-import { MessageCircle, Users, Sparkles, Star, Heart, Zap } from "lucide-react";
+import { Sparkles, Star, Heart } from "lucide-react";
 
 interface Message {
   id: string;
@@ -27,7 +27,7 @@ export function ChatContainer({
 }: ChatContainerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineUsers] = useState(Math.floor(Math.random() * 50) + 10);
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected] = useState(true);
   const [currentUsername, setCurrentUsername] = useState(username || "");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -155,7 +155,7 @@ export function ChatContainer({
 
               <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl p-6 mb-8 max-w-md shadow-xl">
                 <p className="text-white/90 leading-relaxed mb-4">
-                  Konnichiwa! You're chatting as{" "}
+                  Konnichiwa! You&apos;re chatting as{" "}
                   <span className="font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
                     {currentUsername}
                   </span>
@@ -186,7 +186,6 @@ export function ChatContainer({
           onSendMessage={sendMessage}
           disabled={false}
           placeholder="Type your message to the anime dimension... ✨"
-          username={currentUsername}
         />
       </div>
     </div>

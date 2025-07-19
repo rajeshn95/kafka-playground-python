@@ -1,7 +1,5 @@
 import { ChatContainer } from "@/components/chat/ChatContainer";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Sparkles, Heart, Zap } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Sparkles, Heart } from "lucide-react";
 
 export default function Home() {
   return (

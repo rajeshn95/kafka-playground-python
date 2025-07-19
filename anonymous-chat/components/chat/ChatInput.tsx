@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState, type KeyboardEvent } from "react";
-import { Send, Smile, Plus, Sparkles, Heart, Star } from "lucide-react";
+import { Send, Sparkles, Heart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -11,14 +11,12 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
-  username?: string;
 }
 
 export function ChatInput({
   onSendMessage,
   disabled = false,
   placeholder = "Type your message...",
-  username,
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);

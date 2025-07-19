@@ -10,7 +10,6 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({
-  roomName,
   onlineUsers,
   totalMessages,
   isConnected = true,
