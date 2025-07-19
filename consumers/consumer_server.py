@@ -118,6 +118,29 @@ class ConnectionManager:
         task = asyncio.create_task(self._keepalive(websocket))
         self.keepalive_tasks[websocket] = task
         logger.info(f"Client connected ({len(self.active_connections)} total)")
+        
+        # Send immediate connection update to the new client
+        connection_update = {
+            "type": "connection_update",
+            "active_connections": len(self.active_connections),
+            "room": "anonymous-anime-universe",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        await websocket.send_text(json.dumps(connection_update))
+        
+        # Broadcast connection update to all clients
+        await self._broadcast_connection_update()
+
+    async def _broadcast_connection_update(self):
+        """Broadcast current connection count to all clients."""
+        connection_update = {
+            "type": "connection_update",
+            "active_connections": len(self.active_connections),
+            "room": "anonymous-anime-universe",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        await self.broadcast(json.dumps(connection_update))
+        logger.info(f"📡 Broadcasted connection update: {len(self.active_connections)} users online")
 
     async def _keepalive(self, websocket: WebSocket):
         """Send an application‐level heartbeat every 15 s so the WS stays open."""
@@ -139,6 +162,9 @@ class ConnectionManager:
             with contextlib.suppress(asyncio.CancelledError):
                 await task
         logger.info(f"Client disconnected ({len(self.active_connections)} total)")
+        
+        # Broadcast connection update to remaining clients
+        await self._broadcast_connection_update()
 
     async def broadcast(self, message: str):
         """Send a JSON‐string message to all active connections."""

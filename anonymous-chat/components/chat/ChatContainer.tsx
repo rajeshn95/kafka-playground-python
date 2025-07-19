@@ -78,7 +78,18 @@ export function ChatContainer({ roomName, username }: ChatContainerProps) {
           setOnlineUsers(chatMessage.active_connections);
         }
 
-        // Filter out messages from the current user (they already see their own message)
+        // Handle different message types
+        if (chatMessage.type === "connection_update") {
+          // Connection updates don't add messages to chat, just update count
+          console.log(
+            "👥 Connection update:",
+            chatMessage.active_connections,
+            "users online"
+          );
+          return;
+        }
+
+        // For chat messages, filter out messages from the current user
         if (chatMessage.username === currentUsername) {
           console.log("🚫 Ignoring own message from WebSocket");
           return;

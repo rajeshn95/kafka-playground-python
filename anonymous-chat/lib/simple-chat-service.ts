@@ -55,8 +55,9 @@ export class SimpleChatService {
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("🔍 Received message:", data);
+          // console.log("🔍 Received message:", data);
 
+          // Handle different message types
           if (data.type === "chat_message") {
             // Convert to chat message format
             const message: ChatMessage = {
@@ -69,6 +70,21 @@ export class SimpleChatService {
               active_connections: data.active_connections,
             };
             this.config.onMessage?.(message);
+          } else if (data.type === "connection_update") {
+            // Handle connection status updates
+            const message: ChatMessage = {
+              id: `conn_${Date.now()}`,
+              username: "",
+              text: "",
+              timestamp: new Date().toISOString(),
+              room: data.room || "anonymous-anime-universe",
+              type: data.type,
+              active_connections: data.active_connections,
+            };
+            this.config.onMessage?.(message);
+          } else if (data.type === "heartbeat") {
+            // Handle heartbeat messages (optional - for debugging)
+            // console.log("💓 Heartbeat received");
           }
         } catch (error) {
           console.error("Failed to parse message:", error);
