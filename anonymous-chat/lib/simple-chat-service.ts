@@ -6,6 +6,7 @@ export interface ChatMessage {
   room: string;
   type: string;
   message_id?: string;
+  active_connections?: number;
 }
 
 export interface SimpleChatServiceConfig {
@@ -54,6 +55,7 @@ export class SimpleChatService {
       this.ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log("🔍 Received message:", data);
 
           if (data.type === "chat_message") {
             // Convert to chat message format
@@ -64,6 +66,7 @@ export class SimpleChatService {
               timestamp: data.timestamp,
               room: data.room,
               type: data.type,
+              active_connections: data.active_connections,
             };
             this.config.onMessage?.(message);
           }
