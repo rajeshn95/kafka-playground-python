@@ -27,7 +27,7 @@ interface ChatContainerProps {
 
 export function ChatContainer({ roomName, username }: ChatContainerProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState(1);
+  const [onlineUsers, setOnlineUsers] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   const [currentUsername, setCurrentUsername] = useState(username || "");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -69,7 +69,14 @@ export function ChatContainer({ roomName, username }: ChatContainerProps) {
       },
       onMessage: (chatMessage: ChatMessageType) => {
         if (!isMounted) return;
-        console.log("📨 Received message:", chatMessage);
+        if (chatMessage.type !== "heartbeat") {
+          console.log("📨 Received message:", chatMessage);
+        }
+
+        // Update online users count FIRST (before filtering own messages)
+        if (chatMessage.active_connections !== undefined) {
+          setOnlineUsers(chatMessage.active_connections);
+        }
 
         // Filter out messages from the current user (they already see their own message)
         if (chatMessage.username === currentUsername) {
