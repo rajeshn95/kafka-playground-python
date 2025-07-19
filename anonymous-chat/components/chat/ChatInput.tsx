@@ -81,17 +81,22 @@ export function ChatInput({
               </div>
             )}
           </div>
+          {/* Send Button - Now properly separated and visible */}
+          <div className="relative flex-shrink-0">
+            <Button
+              onClick={handleSend}
+              disabled={!message.trim() || disabled}
+              className="h-16 w-16 rounded-2xl bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 hover:from-purple-600 hover:via-pink-600 hover:to-cyan-600 text-white shadow-2xl shadow-purple-500/60 transition-all duration-300 hover:scale-110 disabled:opacity-30 disabled:scale-100 border-2 border-white/30 hover:border-white/50 relative z-10"
+            >
+              <Send className="w-7 h-7" />
+            </Button>
 
-          {/* Send Button */}
-          <Button
-            onClick={handleSend}
-            disabled={!message.trim() || disabled}
-            size="icon"
-            className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 hover:from-purple-600 hover:via-pink-600 hover:to-cyan-600 text-white shadow-2xl shadow-purple-500/50 transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:scale-100 animate-glow flex-shrink-0"
-          >
-            <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-lg sm:rounded-xl blur opacity-30 animate-pulse"></div>
-          </Button>
+            {/* Glowing Effect */}
+            <div className="absolute -inset-2 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500 rounded-2xl blur-lg opacity-50 animate-pulse -z-10"></div>
+
+            {/* Pulsing Ring */}
+            <div className="absolute -inset-1 border-2 border-white/20 rounded-2xl animate-ping opacity-75"></div>
+          </div>
         </div>
 
         {/* Connection Status */}
