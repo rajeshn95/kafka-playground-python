@@ -71,94 +71,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <Card className="group hover:shadow-2xl transition-all duration-500 animate-slide-in">
-            <CardHeader className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <Zap className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Real-time Messaging</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed">
-                Instant message delivery powered by Kafka streams with
-                sub-second latency and beautiful animations
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="group hover:shadow-2xl transition-all duration-500 animate-slide-in"
-            style={{ animationDelay: "0.1s" }}
-          >
-            <CardHeader className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <Shield className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-2xl">100% Anonymous</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed">
-                Chat without revealing your identity. No registration, no
-                tracking, no worries. Your privacy is our priority
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="group hover:shadow-2xl transition-all duration-500 animate-slide-in"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <CardHeader className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <Globe className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Global Community</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-base leading-relaxed">
-                Connect with people worldwide. Share thoughts, ideas, and
-                experiences in a safe, anonymous environment
-              </CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Chat Container */}
         <div
           className="mb-16 animate-fade-in"
           style={{ animationDelay: "0.3s" }}
         >
           <ChatContainer roomName="Global Anonymous Chat" />
-        </div>
-
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          <Card className="text-center">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-foreground mb-2">∞</div>
-              <div className="text-muted-foreground text-sm">Active Users</div>
-            </CardContent>
-          </Card>
-          <Card className="text-center">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-foreground mb-2">⚡</div>
-              <div className="text-muted-foreground text-sm">Real-time</div>
-            </CardContent>
-          </Card>
-          <Card className="text-center">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-foreground mb-2">🔒</div>
-              <div className="text-muted-foreground text-sm">Secure</div>
-            </CardContent>
-          </Card>
-          <Card className="text-center">
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-foreground mb-2">🌍</div>
-              <div className="text-muted-foreground text-sm">Global</div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Footer */}
