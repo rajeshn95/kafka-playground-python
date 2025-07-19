@@ -263,6 +263,7 @@ curl http://localhost:8002/health
 - [Confluent Kafka Python Client](https://github.com/confluentinc/confluent-kafka-python)
 - [Confluent Platform Documentation](https://docs.confluent.io/)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [Deploy the Confluent Platform](https://docs.confluent.io/platform/current/tutorials/cp-demo/on-prem.html#cp-demo-on-prem-tutorial)
 
 ## 🤝 Contributing
 
