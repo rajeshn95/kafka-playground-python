@@ -61,7 +61,6 @@ def create_producer():
         'retries': 3,
         'batch.size': 16384,
         'linger.ms': 1,
-        'buffer.memory': 33554432,
     }
     return Producer(config)
 
@@ -227,7 +226,7 @@ async def produce_batch_messages(messages: list[MessageRequest]):
 
 if __name__ == "__main__":
     uvicorn.run(
-        "producer_api:app",
+        "producer_server:app",
         host="0.0.0.0",
         port=8001,
         reload=True,
