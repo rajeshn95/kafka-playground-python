@@ -106,6 +106,20 @@ services:
       "
     restart: unless-stopped
 
+  anonymous-chat:
+    build:
+      context: ./anonymous-chat
+      dockerfile: Dockerfile
+    container_name: anonymous-chat-app
+    depends_on:
+      - producer-server
+      - consumer-server
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
 volumes:
   zookeeper-data:
     driver: local
